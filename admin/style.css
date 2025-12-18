@@ -1,0 +1,101 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, Arial;
+  background: #f4f6fb;
+  color: #333;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  color: #fff;
+  padding: 20px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+/* Buttons */
+button {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.primary {
+  background: #2575fc;
+  color: #fff;
+}
+
+.danger {
+  background: #ff4d4f;
+  color: #fff;
+}
+
+/* Layout */
+.container {
+  padding: 30px;
+  max-width: 900px;
+  margin: auto;
+}
+
+/* Card */
+.card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  margin-bottom: 30px;
+}
+
+/* Inputs */
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+/* Video List */
+.video-item {
+  padding: 14px;
+  border-bottom: 1px solid #eee;
+}
+
+.video-item:last-child {
+  border-bottom: none;
+}
+
+.video-item span {
+  font-weight: 600;
+}
+
+.video-item a {
+  display: block;
+  color: #2575fc;
+  text-decoration: none;
+  margin-top: 4px;
+  word-break: break-all;
+}
+
+.status {
+  margin-top: 10px;
+  font-weight: 600;
+}
+textarea {
+  font-family: monospace;
+  font-size: 13px;
+}

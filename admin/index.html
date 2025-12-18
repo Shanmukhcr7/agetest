@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel – Age Safe Reels</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="header">
+    <h1>Age Safe Reels – Admin</h1>
+    <button id="logoutBtn" class="danger" style="display:none;">Logout</button>
+  </div>
+
+  <div class="container">
+
+    <button id="loginBtn" class="primary">Login with Google</button>
+
+    <div id="adminSection" style="display:none;">
+
+      <!-- ADD VIDEO -->
+      <div class="card">
+        <h2>Add Reel (Video Link)</h2>
+
+        <label>Video URL (YouTube Shorts, Reels, etc.)</label>
+        <input type="url" id="videoUrl" placeholder="https://www.youtube.com/shorts/..." />
+
+        <label style="margin-top:14px;">Age Category</label>
+        <select id="category">
+          <option>Kid</option>
+          <option>Teen</option>
+          <option>Young Adult</option>
+          <option>Adult</option>
+          <option>Senior</option>
+        </select>
+
+        <button id="addBtn" class="primary" style="margin-top:16px;">Save Video</button>
+        <div id="status" class="status"></div>
+      </div>
+
+      <!-- LIST VIDEOS -->
+      <div class="card">
+        <h2>Saved Videos</h2>
+        <div id="videoList"></div>
+      </div>
+
+    </div>
+  </div>
+<!-- BULK JSON IMPORT -->
+<div class="card">
+  <h2>Bulk Import (JSON)</h2>
+
+  <p style="font-size:14px;color:#666;">
+    Paste an array of video objects (url + category)
+  </p>
+
+  <textarea
+    id="jsonInput"
+    rows="10"
+    placeholder='[
+  { "url": "https://youtube.com/shorts/...", "category": "Kid" },
+  { "url": "https://youtube.com/shorts/...", "category": "Adult" }
+]'
+    style="width:100%;padding:12px;border-radius:8px;border:1px solid #ddd;"
+  ></textarea>
+
+  <button
+    id="importBtn"
+    class="primary"
+    style="margin-top:14px;"
+  >
+    Import JSON
+  </button>
+
+  <div id="jsonStatus" class="status"></div>
+</div>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
