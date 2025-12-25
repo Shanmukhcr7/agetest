@@ -5,7 +5,7 @@ import { collection, getDocs, query, where, limit, startAfter, orderBy } from "h
 // CONFIGURATION
 // ============================================
 const CONFIG = {
-    API_URL: "http://localhost:8000/api/age-check",
+    API_URL: "https://age-x.onrender.com/api/age-check",
     SAFETY: {
         CONFIDENCE_THRESHOLD: 0.60,
         ADULT_FRAME_BUFFER: 1, // Unlock faster (20s interval is long enough)
@@ -663,3 +663,4 @@ class App {
 }
 
 window.addEventListener("load", () => new App());
+
