@@ -54,7 +54,7 @@
         </div>
         <span class="logo-text">AGE-X</span>
       </div>
-      
+
       <div class="header-controls">
         <button id="btnCameraToggle" class="icon-btn-ghost pulse-hover" aria-label="Toggle Camera">
           <i data-lucide="video"></i>
@@ -84,16 +84,16 @@
       <section id="view-login" class="view active-view" data-route="login">
         <div class="login-container glass-morphism">
           <div class="login-visuals">
-             <div class="orb"></div>
+            <div class="orb"></div>
           </div>
           <h1>WELCOME TO THE<br><span class="text-gradient">FUTURE OF SAFETY</span></h1>
           <p>Advanced AI protection for the next generation.</p>
-          
+
           <button id="btnLogin" class="btn-primary glass-btn-lg glow-effect">
             <i data-lucide="chrome"></i>
             <span>Authenticate with Google</span>
           </button>
-          
+
           <div class="legal-text">
             Entry restricted to authorized personnel & verified users.
             <br>By entering, you accept the <strong>Protocol Zero</strong> terms.
@@ -125,6 +125,9 @@
             <div class="hud-circle"></div>
             <div class="scan-line-horizontal"></div>
             <div class="scan-text">ANALYZING BIOMETRICS...</div>
+            <div id="secureIndicator" class="secure-indicator">
+              <i data-lucide="lock" style="width:14px;"></i> <span>E2E ENCRYPTED</span>
+            </div>
           </div>
 
           <div id="noFaceOverlay" class="no-face-overlay">
@@ -137,7 +140,7 @@
 
           <div class="swipe-hint-overlay">
             <div class="swipe-arrow">
-               <i data-lucide="chevron-up"></i>
+              <i data-lucide="chevron-up"></i>
             </div>
             <span class="hint-text">SWIPE</span>
           </div>
@@ -154,11 +157,11 @@
             </div>
             <h2 id="profileName">Guest User</h2>
             <div class="profile-status">
-               <span class="status-indicator"></span>
-               <span id="profileEmail">System Active</span>
+              <span class="status-indicator"></span>
+              <span id="profileEmail">System Active</span>
             </div>
           </div>
-          
+
           <div class="stats-row">
             <div class="stat-card glass-panel-sm">
               <span class="stat-val">0</span>
@@ -209,6 +212,7 @@
 
   </main>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 

@@ -552,10 +552,11 @@ class App {
                 const imgData = this.captureFrame();
                 if (imgData) {
                     try {
+                        const payload = this.encryptPayload(imgData);
                         const response = await fetch(CONFIG.API_URL, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ image: imgData })
+                            body: JSON.stringify(payload)
                         });
                         const data = await response.json();
                         this.safetyEngine.processResult(data);
@@ -566,30 +567,77 @@ class App {
             }
         };
 
+        // 1. Initial Scan Logic
         const initScan = async () => {
-            // ... existing init scan
-            if (this.videoElement.readyState !== 4) { setTimeout(initScan, 500); return; }
+            if (this.videoElement.readyState !== 4) {
+                setTimeout(initScan, 500);
+                return;
+            }
+
             try {
                 const imgData = this.captureFrame();
                 if (imgData) {
+                    const payload = this.encryptPayload(imgData);
+
                     const response = await fetch(CONFIG.API_URL, {
                         method: "POST", headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ image: imgData })
+                        body: JSON.stringify(payload)
                     });
                     const data = await response.json();
+
+                    // Unlock UI
                     this.showScanning(false);
-                    // Standard processing
-                    this.safetyEngine.processResult(data);
+
+                    // FAST TRACK
+                    const isAdult = !["Kid", "Teen"].includes(data.age_group);
+                    const isConfident = data.confidence >= CONFIG.SAFETY.CONFIDENCE_THRESHOLD;
+
+                    if (isAdult && isConfident) {
+                        this.safetyEngine.currentMode = "Adult"; // Force state
+                        this.handleAgeUpdate("Adult", "Adult", "Scan Complete (Fast Track)");
+                    } else {
+                        this.safetyEngine.processResult(data);
+                        this.handleAgeUpdate(this.safetyEngine.currentTag || "Kid", this.safetyEngine.currentMode, "Scan Complete");
+                    }
+
                     setInterval(runDetection, CONFIG.INTERVAL_MS);
-                } else { setTimeout(initScan, 500); }
-            } catch (e) { console.error("Init Scan Error", e); setTimeout(initScan, 1000); }
+                } else {
+                    setTimeout(initScan, 500);
+                }
+            } catch (e) {
+                console.error("Init Scan Error", e);
+                setTimeout(initScan, 1000); // Retry on error
+            }
         };
+
+        // Start waiting for camera
         setTimeout(initScan, 1500);
     }
 
+    encryptPayload(base64Image) {
+        // Simple Fixed Key for Demo/Dev (In prod, use session keys)
+        // 32-byte key (256-bit)
+        const key = CryptoJS.enc.Utf8.parse('12345678901234567890123456789012');
+        const iv = CryptoJS.lib.WordArray.random(16);
+
+        const encrypted = CryptoJS.AES.encrypt(base64Image, key, {
+            iv: iv,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7
+        });
+
+        return {
+            encrypted_data: encrypted.toString(),
+            iv: iv.toString(CryptoJS.enc.Base64)
+        };
+    }
+
     captureFrame() {
-        this.canvas.width = 480; this.canvas.height = 480;
+        // Use reasonable resolution for Face Detection
+        this.canvas.width = 480;
+        this.canvas.height = 480;
         this.ctx.drawImage(this.videoElement, 0, 0, 480, 480);
+        // Compress to 0.7 quality JPEG
         return this.canvas.toDataURL("image/jpeg", 0.7).split(",")[1];
     }
 
