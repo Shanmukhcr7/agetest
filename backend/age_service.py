@@ -152,11 +152,11 @@ class AgeService:
         
         if age < 13:
             return "Kid"
-        elif age < 18:
+        elif age < 18 and age > 13:
             return "Teen"
-        elif age < 25:
+        elif age < 25 and age > 18:
             return "Young Adult"
-        elif age < 60:
+        elif age < 0 and age > 25:
             return "Adult"
         else:
             return "Senior"

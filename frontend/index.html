@@ -25,12 +25,21 @@
 
 <body class="loading-state">
 
+  <!-- DYNAMIC BACKGROUND -->
+  <div id="cosmos-container" class="cosmos-background"></div>
+
   <!-- SPLASH SCREEN -->
   <div id="splashScreen" class="splash-screen">
     <div class="splash-content">
-      <h1 class="splash-logo">AGE<span class="highlight">-X</span></h1>
-      <p class="splash-text">Initializing Secure Environment...</p>
-      <div class="loader-line"></div>
+      <div class="splash-logo-wrapper">
+        <h1 class="splash-logo">AGE<span class="highlight">-X</span></h1>
+        <div class="splash-glitch" aria-hidden="true">AGE-X</div>
+      </div>
+      <p class="splash-text">INITIALIZING SECURE PROTOCOLS...</p>
+      <div class="loader-track">
+        <div class="loader-bar"></div>
+      </div>
+      <div class="splash-subtext">AI-POWERED PROTECTION SYSTEM</div>
     </div>
   </div>
 
@@ -38,21 +47,33 @@
   <main class="app-container" aria-hidden="true">
 
     <!-- GLOBAL ELEMENTS (Always Visible) -->
-    <header class="top-bar glass-panel">
+    <header class="top-bar glass-panel-header">
       <div class="brand">
+        <div class="brand-icon">
+          <i data-lucide="shield-check"></i>
+        </div>
         <span class="logo-text">AGE-X</span>
       </div>
-      <button id="btnCameraToggle" class="icon-btn-ghost" aria-label="Toggle Camera">
-        <i data-lucide="video"></i>
-      </button>
-      <div id="statusBadge" class="status-badge status-kid">
-        <i data-lucide="shield-check" class="icon-sm"></i>
-        <span id="ageLabel">Kid Safe</span>
+      
+      <div class="header-controls">
+        <button id="btnCameraToggle" class="icon-btn-ghost pulse-hover" aria-label="Toggle Camera">
+          <i data-lucide="video"></i>
+        </button>
+        <div id="statusBadge" class="status-badge status-kid">
+          <div class="status-dot"></div>
+          <span id="ageLabel">SECURE</span>
+        </div>
       </div>
     </header>
 
-    <div class="camera-wrapper glass-panel">
+    <div class="camera-wrapper glass-panel-sm">
       <video id="cameraFeed" autoplay muted playsinline></video>
+      <div class="hud-corners">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
+      </div>
       <div class="scan-line"></div>
     </div>
 
@@ -61,22 +82,31 @@
 
       <!-- LOGIN VIEW -->
       <section id="view-login" class="view active-view" data-route="login">
-        <div class="login-container">
-          <h1>Welcome into the Future</h1>
-          <p>Experience the safest way to stream.</p>
-          <button id="btnLogin" class="btn-primary glass-btn">
+        <div class="login-container glass-morphism">
+          <div class="login-visuals">
+             <div class="orb"></div>
+          </div>
+          <h1>WELCOME TO THE<br><span class="text-gradient">FUTURE OF SAFETY</span></h1>
+          <p>Advanced AI protection for the next generation.</p>
+          
+          <button id="btnLogin" class="btn-primary glass-btn-lg glow-effect">
             <i data-lucide="chrome"></i>
-            <span>Continue with Google</span>
+            <span>Authenticate with Google</span>
           </button>
+          
           <div class="legal-text">
-            By continuing, you agree to our <strong>Safety Protocol</strong>.
+            Entry restricted to authorized personnel & verified users.
+            <br>By entering, you accept the <strong>Protocol Zero</strong> terms.
           </div>
         </div>
       </section>
 
       <!-- HOME VIEW (Grid) -->
       <section id="view-home" class="view" data-route="home">
-        <h2 class="view-title">Discover</h2>
+        <div class="view-header">
+          <h2 class="view-title">DISCOVER</h2>
+          <div class="decoration-line"></div>
+        </div>
         <div class="content-grid" id="homeGrid">
           <!-- Dynamic Items -->
         </div>
@@ -92,50 +122,65 @@
           <div class="video-overlay-gradient"></div>
 
           <div id="scanningOverlay" class="scanning-overlay">
-            <div class="scan-line"></div>
-            <div class="scan-text">Analyzing Face...</div>
+            <div class="hud-circle"></div>
+            <div class="scan-line-horizontal"></div>
+            <div class="scan-text">ANALYZING BIOMETRICS...</div>
           </div>
 
           <div id="noFaceOverlay" class="no-face-overlay">
-            <i data-lucide="eye-off" class="warning-icon"></i>
-            <div class="warning-text">Face Lost</div>
-            <div class="warning-sub">Security Lock Active. Please align face to camera.</div>
+            <div class="lock-icon-wrapper">
+              <i data-lucide="lock" class="warning-icon"></i>
+            </div>
+            <div class="warning-text">ACCESS SUSPENDED</div>
+            <div class="warning-sub">Biometric verification lost. Re-align for access.</div>
           </div>
 
           <div class="swipe-hint-overlay">
-            <i data-lucide="chevrons-up"></i>
-            Swipe
+            <div class="swipe-arrow">
+               <i data-lucide="chevron-up"></i>
+            </div>
+            <span class="hint-text">SWIPE</span>
           </div>
         </div>
       </section>
 
       <!-- PROFILE VIEW -->
       <section id="view-profile" class="view" data-route="profile">
-        <div class="profile-header">
-          <div class="profile-avatar glass-effect" id="profileAvatar">
-            <i data-lucide="user"></i>
+        <div class="profile-card glass-panel-lg">
+          <div class="profile-header">
+            <div class="profile-avatar glass-avatar" id="profileAvatar">
+              <i data-lucide="user"></i>
+              <div class="avatar-ring"></div>
+            </div>
+            <h2 id="profileName">Guest User</h2>
+            <div class="profile-status">
+               <span class="status-indicator"></span>
+               <span id="profileEmail">System Active</span>
+            </div>
           </div>
-          <h2 id="profileName">Guest User</h2>
-          <p id="profileEmail">Safe Mode Active</p>
+          
+          <div class="stats-row">
+            <div class="stat-card glass-panel-sm">
+              <span class="stat-val">0</span>
+              <span class="stat-label">SAVED</span>
+            </div>
+            <div class="stat-card glass-panel-sm">
+              <span class="stat-val">0h</span>
+              <span class="stat-label">SESSION</span>
+            </div>
+          </div>
         </div>
-        <div class="stats-row">
-          <div class="stat-card glass-panel">
-            <span class="stat-val">0</span>
-            <span class="stat-label">Saved</span>
-          </div>
-          <div class="stat-card glass-panel">
-            <span class="stat-val">0h</span>
-            <span class="stat-label">Time</span>
-          </div>
-        </div>
+
         <div class="settings-list">
           <button class="setting-item glass-btn" id="btnLogout">
-            <i data-lucide="log-out"></i>
-            <span>Sign Out</span>
+            <div class="setting-icon"><i data-lucide="log-out"></i></div>
+            <span>Terminate Session</span>
+            <i data-lucide="chevron-right" class="arrow-right"></i>
           </button>
-          <div class="setting-item glass-btn">
-            <i data-lucide="shield"></i>
-            <span>Safety Settings (Locked)</span>
+          <div class="setting-item glass-btn disabled">
+            <div class="setting-icon"><i data-lucide="shield-alert"></i></div>
+            <span>Security Level: MAX</span>
+            <i data-lucide="lock" class="lock-mini"></i>
           </div>
         </div>
       </section>
@@ -143,19 +188,20 @@
     </div>
 
     <!-- NAVIGATION BAR -->
-    <nav class="bottom-nav glass-panel">
+    <nav class="bottom-nav glass-nav">
       <button class="nav-item" data-target="home">
-        <i data-lucide="grid"></i>
-        <span>Home</span>
+        <div class="nav-icon-wrapper"><i data-lucide="grid"></i></div>
+        <span>HOME</span>
       </button>
       <button class="nav-item active-nav" data-target="reels">
-        <i data-lucide="play-circle"></i>
-        <span>Reels</span>
+        <div class="nav-icon-wrapper"><i data-lucide="play"></i></div>
+        <span>STREAM</span>
       </button>
       <button class="nav-item" data-target="profile">
-        <i data-lucide="user"></i>
-        <span>Profile</span>
+        <div class="nav-icon-wrapper"><i data-lucide="user"></i></div>
+        <span>ID</span>
       </button>
+      <div class="nav-indicator"></div>
     </nav>
 
     <!-- Hidden Canvas -->

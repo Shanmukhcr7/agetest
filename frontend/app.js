@@ -5,7 +5,7 @@ import { collection, getDocs, query, where, limit, startAfter, orderBy } from "h
 // CONFIGURATION
 // ============================================
 const CONFIG = {
-    API_URL: "https://age-x.onrender.com/api/age-check",
+    API_URL: "http://localhost:8000/api/age-check",
     SAFETY: {
         CONFIDENCE_THRESHOLD: 0.60,
         ADULT_FRAME_BUFFER: 1, // Unlock faster (20s interval is long enough)
@@ -134,8 +134,8 @@ class HomeManager {
         this.currentMode = "Kid"; // Default
     }
 
-    async loadSections(mode = null, reset = false) {
-        if (mode) this.currentMode = mode;
+    async loadSections(tag = null, reset = false) {
+        if (tag) this.currentTag = tag;
         if (this.loading) return;
         this.loading = true;
         if (reset) {
@@ -143,10 +143,23 @@ class HomeManager {
         }
 
         try {
-            // Define categories based on mode
-            const categories = this.currentMode === "Adult"
-                ? ["Kid", "Teen", "Adult", "Senior", "Young Adult", "adult", "teen"]
-                : ["Kid", "kid"];
+            // Define categories based on specific tag
+            let categories = ["Kid", "kid"]; // Default Safe
+
+            // Map Tags to Categories
+            const tagMap = {
+                "Kid": ["Kid", "kid"],
+                "Teen": ["Teen", "Kid", "teen"],
+                "Young Adult": ["Young Adult", "Teen", "Adult", "adult"],
+                "Adult": ["Adult", "Senior", "Young Adult", "adult", "teen"],
+                "Senior": ["Adult", "Senior", "Young Adult", "adult"]
+            };
+
+            if (tagMap[this.currentTag]) {
+                categories = tagMap[this.currentTag];
+            }
+
+            console.log(`HOME: Loading for TAG: ${this.currentTag}, Categories:`, categories);
 
             // Get Videos (Limit 20 for sections)
             const q = query(
@@ -158,14 +171,14 @@ class HomeManager {
             const videos = [];
             snapshot.forEach(doc => videos.push(doc.data()));
 
-            console.log(`HOME: Found ${videos.length} videos for ${this.currentMode}`);
+            console.log(`HOME: Found ${videos.length} videos`);
 
             // Split into sections
             if (videos.length > 0) {
                 const trending = videos.slice(0, 10);
                 const liked = videos.slice(10, 20).length ? videos.slice(10, 20) : videos.slice(0, 5); // Fallback
 
-                this.renderSection("🔥 Trending Now", trending, "trending");
+                this.renderSection(`For ${this.currentTag}s`, trending, "trending");
                 this.renderSection("❤️ Most Liked", liked, "liked");
             } else {
                 this.renderFallback();
@@ -179,6 +192,7 @@ class HomeManager {
     }
 
     renderSection(title, videos, type) {
+        // ... (Keep existing renderSection)
         // Section Container
         const section = document.createElement("div");
         section.className = "home-section";
@@ -202,6 +216,7 @@ class HomeManager {
         if (window.lucide) lucide.createIcons();
     }
 
+    // ... (Keep existing renderCard, extractVideoId, renderFallback)
     renderCard(data, container) {
         const videoId = this.extractVideoId(data.url);
         if (!videoId) return;
@@ -243,20 +258,18 @@ class HomeManager {
     }
 
     renderFallback() {
-        // Fallback or Demo content
         const mocks = [
             { url: "https://youtube.com/watch?v=5qap5aO4i9A", title: "Lo-Fi Beats" },
             { url: "https://youtube.com/watch?v=tgbNymZ7vqY", title: "Coding Life" },
             { url: "https://youtube.com/watch?v=jfKfPfyJRdk", title: "Relaxing View" }
         ];
-        // Just render them into a specific section if empty
         if (this.grid.children.length === 0) {
             this.renderSection("Recommended", mocks, "trending");
         }
     }
 
     // Alias for compatibility
-    loadGrid(mode, reset) { this.loadSections(mode, reset); }
+    loadGrid(tag, reset) { this.loadSections(tag, reset); }
 }
 
 // ... SAFETY & REEL LOGIC Same as before, but wrapped ...
@@ -275,17 +288,16 @@ class ReelManager {
         this.playingFrame = null;
     }
 
+    // ... (Keep handleScroll, playVideoId, pause, play, postMessage, extractId, etc.)
     handleScroll(entries) {
         entries.forEach(entry => {
             const iframe = entry.target.querySelector("iframe");
             if (!iframe) return;
 
             if (entry.isIntersecting) {
-                // Play
                 this.postMessage(iframe, "playVideo");
                 this.playingFrame = iframe;
             } else {
-                // Pause
                 this.postMessage(iframe, "pauseVideo");
             }
         });
@@ -306,11 +318,19 @@ class ReelManager {
         if (this.playingFrame) this.postMessage(this.playingFrame, "playVideo");
     }
 
-    async loadReels(mode) {
-        console.log(`REELS: Loading for ${mode}...`);
-        const categories = mode === "Adult"
-            ? ["Kid", "Teen", "Adult", "Senior", "Young Adult", "adult", "teen", "senior"]
-            : ["Kid", "kid"];
+    async loadReels(tag) {
+        console.log(`REELS: Loading for TAG: ${tag}...`);
+
+        let categories = ["Kid", "kid"];
+        const tagMap = {
+            "Kid": ["Kid", "kid"],
+            "Teen": ["Teen", "Kid", "teen"],
+            "Young Adult": ["Young Adult", "Teen", "Adult", "adult"],
+            "Adult": ["Adult", "Senior", "Young Adult", "adult", "teen"],
+            "Senior": ["Adult", "Senior", "Young Adult", "adult", "senior"]
+        };
+
+        if (tagMap[tag]) categories = tagMap[tag];
 
         try {
             const q = query(collection(db, "reels"), where("category", "in", categories));
@@ -325,14 +345,14 @@ class ReelManager {
             });
 
             console.log(`REELS: Found ${videos.length} videos`);
-            if (videos.length === 0) this.reels = this.getFallbackReels(mode);
+            if (videos.length === 0) this.reels = this.getFallbackReels(tag);
             else this.reels = this.shuffle(videos);
 
             this.renderVideos(this.reels);
 
         } catch (e) {
             console.warn("REELS: error", e);
-            this.reels = this.getFallbackReels(mode);
+            this.reels = this.getFallbackReels(tag);
             this.renderVideos(this.reels);
         }
     }
@@ -371,20 +391,21 @@ class ReelManager {
 
     formatUrl(url) { return url; }
     shuffle(array) { return array.sort(() => Math.random() - 0.5); }
-    getFallbackReels(mode) {
+    getFallbackReels(tag) {
         const safe = ["5qap5aO4i9A", "tgbNymZ7vqY"];
         const adult = [...safe, "jfKfPfyJRdk"];
-        return mode === "Adult" ? adult : safe;
+        return (tag === "Kid" || tag === "Teen") ? safe : adult;
     }
 }
 
 class SafetyEngine {
-    constructor(onModeChange) {
+    constructor(onAgeUpdate) {
         this.currentMode = "Kid";
+        this.currentTag = "Kid";
         this.consecutiveAdultFrames = 0;
         this.errorBuffer = 0; // Grace period for missing faces
         this.MAX_ERROR_BUFFER = 3; // Allow 3 frames (~4.5s) of "No Face" before locking
-        this.onModeChange = onModeChange;
+        this.onAgeUpdate = onAgeUpdate;
     }
 
     processResult(data) {
@@ -393,7 +414,7 @@ class SafetyEngine {
         if (data.error || data.forced_safety) {
             console.warn("Safety Warning:", data.msg || "Unknown Error");
 
-            if (this.currentMode === "Adult") {
+            if (this.currentMode !== "Kid") { // Only degrade if not already Kid
                 this.errorBuffer++;
                 if (this.errorBuffer > this.MAX_ERROR_BUFFER) {
                     this.forceSafeMode("Face Lost / Error Limit Reached");
@@ -405,42 +426,59 @@ class SafetyEngine {
         // Reset Error Buffer on any valid detection
         this.errorBuffer = 0;
 
-        const detectedGroup = data.age_group;
-        const isSafeGroup = ["Kid", "Teen"].includes(detectedGroup);
+        const detectedTag = data.age_group;
+        const isSafeGroup = ["Kid", "Teen"].includes(detectedTag);
 
         if (isSafeGroup) {
             // CRITICAL: Immediate Downgrade on Child Detection
-            if (this.currentMode !== "Kid") {
-                this.forceSafeMode(`Child Detected (${detectedGroup})`);
+            if (this.currentTag !== detectedTag || this.currentMode !== "Kid") {
+                // Even if switching Teen -> Kid, we update.
+                this.forceSafeMode(`Child Detected (${detectedTag})`, detectedTag);
             }
             this.consecutiveAdultFrames = 0;
         } else {
-            // Adult Detected
+            // Adult Detected (Young Adult, Adult, Senior)
             if (this.currentMode === "Kid") {
+                // Must pass confidence threshold to UNLOCK
                 if (data.confidence >= CONFIG.SAFETY.CONFIDENCE_THRESHOLD) {
                     this.consecutiveAdultFrames++;
                     if (this.consecutiveAdultFrames >= CONFIG.SAFETY.ADULT_FRAME_BUFFER) {
-                        this.unlockAdultMode();
+                        this.unlockAdultMode(detectedTag);
                     }
                 } else {
                     this.consecutiveAdultFrames = 0;
+                }
+            } else {
+                // Already unlocked, just checking for TAG updates
+                if (this.currentTag !== detectedTag) {
+                    // Update tag immediately if confidence is okay
+                    if (data.confidence >= CONFIG.SAFETY.CONFIDENCE_THRESHOLD) {
+                        this.updateTag(detectedTag);
+                    }
                 }
             }
         }
     }
 
-    forceSafeMode(reason) {
+    forceSafeMode(reason, tag = "Kid") {
         this.currentMode = "Kid";
+        this.currentTag = tag;
         this.consecutiveAdultFrames = 0;
         this.errorBuffer = 0;
-        this.onModeChange("Kid", reason);
+        this.onAgeUpdate(tag, "Kid", reason);
     }
 
-    unlockAdultMode() {
+    unlockAdultMode(tag) {
         if (this.currentMode !== "Adult") {
             this.currentMode = "Adult";
-            this.onModeChange("Adult", "Verified");
+            this.currentTag = tag;
+            this.onAgeUpdate(tag, "Adult", "Verified");
         }
+    }
+
+    updateTag(tag) {
+        this.currentTag = tag;
+        this.onAgeUpdate(tag, "Adult", "Tag Update");
     }
 }
 
@@ -467,57 +505,27 @@ class App {
         this.homeManager = new HomeManager(this);
         this.profileManager = new ProfileManager();
         this.router = new Router(this);
-        this.safetyEngine = new SafetyEngine(this.handleModeChange.bind(this));
+        this.safetyEngine = new SafetyEngine(this.handleAgeUpdate.bind(this));
 
         this.init();
     }
 
+    // ... (Keep existing init, showScanning, animateIntro, startAgeDetection, captureFrame)
     async init() {
         this.animateIntro();
-
         // Camera
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
             this.videoElement.srcObject = stream;
         } catch (e) { console.error("Camera denied", e); }
-
-        // Start Safety Loop
         this.startAgeDetection();
-
-        // Auth Listener
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log("Logged In:", user.email);
-                this.router.navigate("reels"); // Go to Reels on login
-            } else {
-                console.log("Logged Out");
-                this.router.navigate("login");
-            }
-        });
-
-        // Login Button
-        document.getElementById("btnLogin").addEventListener("click", () => {
-            signInWithPopup(auth, googleProvider).catch(err => alert(err.message));
-        });
-
-        // Logout Button
+        onAuthStateChanged(auth, (user) => { if (user) this.router.navigate("reels"); else this.router.navigate("login"); });
+        document.getElementById("btnLogin").addEventListener("click", () => { signInWithPopup(auth, googleProvider).catch(err => alert(err.message)); });
         const btnLogout = document.getElementById("btnLogout");
-        if (btnLogout) {
-            btnLogout.addEventListener("click", () => {
-                signOut(auth).catch((error) => console.error("Sign Out Error", error));
-            });
-        }
-
-        // Camera Toggle
+        if (btnLogout) btnLogout.addEventListener("click", () => { signOut(auth).catch((error) => console.error("Sign Out Error", error)); });
         const btnToggle = document.getElementById("btnCameraToggle");
-        if (btnToggle) {
-            btnToggle.addEventListener("click", () => this.toggleCameraVisibility());
-        }
-
-        // Default empty gestures (scroll handles it now)
+        if (btnToggle) btnToggle.addEventListener("click", () => this.toggleCameraVisibility());
         this.setupGestures();
-
-        // Initial State: Scanning
         this.showScanning(true);
     }
 
@@ -539,6 +547,7 @@ class App {
     startAgeDetection() {
         // Define the detection routine
         const runDetection = async () => {
+            // ... existing detection logic
             if (this.videoElement.readyState === 4) {
                 const imgData = this.captureFrame();
                 if (imgData) {
@@ -551,22 +560,15 @@ class App {
                         const data = await response.json();
                         this.safetyEngine.processResult(data);
                     } catch (e) {
-                        // Only force safe if it's a real recurring network error, 
-                        // mostly handled by safety engine, but here we can log.
                         this.safetyEngine.forceSafeMode("Network Error");
                     }
                 }
             }
         };
 
-        // 1. Initial Scan Logic
         const initScan = async () => {
-            // Wait for camera ready
-            if (this.videoElement.readyState !== 4) {
-                setTimeout(initScan, 500);
-                return;
-            }
-
+            // ... existing init scan
+            if (this.videoElement.readyState !== 4) { setTimeout(initScan, 500); return; }
             try {
                 const imgData = this.captureFrame();
                 if (imgData) {
@@ -575,90 +577,57 @@ class App {
                         body: JSON.stringify({ image: imgData })
                     });
                     const data = await response.json();
-
-                    // Unlock UI
                     this.showScanning(false);
-
-                    // FAST TRACK: Bypass buffer for initial scan if clear winner
-                    const isAdult = !["Kid", "Teen"].includes(data.age_group);
-                    const isConfident = data.confidence >= CONFIG.SAFETY.CONFIDENCE_THRESHOLD;
-
-                    if (isAdult && isConfident) {
-                        this.safetyEngine.currentMode = "Adult"; // Force state
-                        this.handleModeChange("Adult", "Scan Complete (Fast Track)");
-                    } else {
-                        // Standard Fallback (Likely Kid or Low Confidence)
-                        this.safetyEngine.processResult(data);
-                        this.handleModeChange(this.safetyEngine.currentMode, "Scan Complete");
-                    }
-
-                    // Start Periodic Checks
+                    // Standard processing
+                    this.safetyEngine.processResult(data);
                     setInterval(runDetection, CONFIG.INTERVAL_MS);
-                } else {
-                    setTimeout(initScan, 500); // Retry if bad frame
-                }
-            } catch (e) {
-                console.error("Init Scan Error", e);
-                setTimeout(initScan, 1000); // Retry on error
-            }
+                } else { setTimeout(initScan, 500); }
+            } catch (e) { console.error("Init Scan Error", e); setTimeout(initScan, 1000); }
         };
-
-        // Start waiting for camera
         setTimeout(initScan, 1500);
     }
 
     captureFrame() {
-        // Use reasonable resolution for Face Detection (Haar/SSD needs pixels)
-        // 480px is a good balance between speed and accuracy
-        this.canvas.width = 480;
-        this.canvas.height = 480;
+        this.canvas.width = 480; this.canvas.height = 480;
         this.ctx.drawImage(this.videoElement, 0, 0, 480, 480);
-        // Compress to 0.7 quality JPEG to reduce payload
         return this.canvas.toDataURL("image/jpeg", 0.7).split(",")[1];
-    }
-
-    handleModeChange(mode, reason) {
-        console.log(`MODE: ${mode} (${reason})`);
-        if (mode === "Kid") {
-            this.ui.badge.className = "status-badge status-kid";
-            this.ui.label.innerText = "Kid Safe";
-
-            // Check for Face Lost ONLY (Child Detection should just switch mode)
-            if (reason && reason.includes("Face Lost")) {
-                if (this.ui.overlay) this.ui.overlay.classList.add("no-face-visible");
-                this.reelManager.pause();
-                return; // Stop here, don't load content
-            }
-        } else {
-            this.ui.badge.className = "status-badge status-adult";
-            this.ui.label.innerText = "Adult Mode";
-        }
-
-        // Resume if valid
-        if (this.ui.overlay) this.ui.overlay.classList.remove("no-face-visible");
-        // this.reelManager.play(); // REMOVED: Don't play old video before loading new ones
-        this.reelManager.loadReels(mode);
-        // Ensure Home Grid also updates with relevant content (Resetting grid)
-        this.homeManager.loadGrid(mode, true);
     }
 
     toggleCameraVisibility() {
         const wrapper = document.querySelector(".camera-wrapper");
         const btn = document.getElementById("btnCameraToggle");
-        if (wrapper) {
-            wrapper.classList.toggle("camera-hidden");
-            const isHidden = wrapper.classList.contains("camera-hidden");
-            // Update icon
-            if (btn) {
-                btn.innerHTML = isHidden ? `<i data-lucide="video-off"></i>` : `<i data-lucide="video"></i>`;
-                if (window.lucide) lucide.createIcons();
-            }
-        }
+        if (wrapper) { wrapper.classList.toggle("camera-hidden"); const isHidden = wrapper.classList.contains("camera-hidden"); if (btn) { btn.innerHTML = isHidden ? `<i data-lucide="video-off"></i>` : `<i data-lucide="video"></i>`; if (window.lucide) lucide.createIcons(); } }
     }
 
-    setupGestures() {
-        // No manual swipe anymore - using native scroll-snap
-        if (window.lucide) window.lucide.createIcons();
+    setupGestures() { if (window.lucide) window.lucide.createIcons(); }
+
+    handleAgeUpdate(tag, mode, reason) {
+        console.log(`UPDATE: ${tag} (${mode}) - ${reason}`);
+
+        // UI Updates
+        if (mode === "Kid" || tag === "Teen") {
+            // Safe Mode UI
+            this.ui.badge.className = "status-badge status-kid";
+            // Check specifically for Face Lost to show overlay
+            if (reason && reason.includes("Face Lost")) {
+                if (this.ui.overlay) this.ui.overlay.classList.add("no-face-visible");
+                this.reelManager.pause();
+                return;
+            }
+        } else {
+            // Adult Mode UI
+            this.ui.badge.className = "status-badge status-adult";
+        }
+
+        // Update Label with EXACT TAG
+        this.ui.label.innerText = tag.toUpperCase();
+
+        // Resume if valid
+        if (this.ui.overlay) this.ui.overlay.classList.remove("no-face-visible");
+
+        // Reload Content with specific TAG
+        this.reelManager.loadReels(tag);
+        this.homeManager.loadGrid(tag, true);
     }
 }
 
